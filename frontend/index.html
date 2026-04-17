@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Fantasy World Designer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <header class="topbar">
+      <div class="brand">
+        <div class="sigil" aria-hidden="true"></div>
+        <div>
+          <div class="brand-title">AI Fantasy World Designer</div>
+          <div class="brand-subtitle">Generate worlds. Speak to their lore.</div>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button id="themeToggle" class="btn ghost" type="button" title="Toggle theme">Theme</button>
+        <button id="guestBtn" class="btn ghost" type="button">Continue as guest</button>
+        <button id="loginBtn" class="btn ghost" type="button" data-auth-trigger>Login</button>
+        <button id="signupBtn" class="btn ghost" type="button" data-auth-trigger>Sign Up</button>
+        <button id="logoutBtn" class="btn ghost" type="button" hidden>Logout</button>
+        <div id="user-pill" class="user-pill" hidden>
+          <img id="user-avatar" class="user-avatar" src="" alt="avatar" width="28" height="28" />
+          <span id="user-name" class="user-name"></span>
+          <a href="/auth/logout" class="logout-link" title="Sign out">↩</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <section id="hero-banner" class="hero-banner">
+        <div class="hero-copy">
+          <div class="eyebrow">Fantasy AI Studio</div>
+          <h1>Build fantasy worlds, chat with lore, and save your stories.</h1>
+          <p>Use the AI assistant to generate immersive kingdoms, creatures, magic systems, and narrative hooks in seconds.</p>
+          <div class="hero-actions">
+            <button id="signupBtnHero" class="btn primary" type="button" data-auth-trigger>Create account</button>
+            <button id="loginBtnHero" class="btn ghost" type="button" data-auth-trigger>Login</button>
+            <button id="guestBtnHero" class="btn ghost" type="button">Continue as guest</button>
+          </div>
+        </div>
+        <div class="hero-panel">
+          <div class="hero-panel-card">
+            <div class="hero-panel-title">Instant world generation</div>
+            <p>Turn your idea into a complete fantasy world blueprint with one prompt.</p>
+          </div>
+          <div class="hero-panel-card">
+            <div class="hero-panel-title">Chat with your lore</div>
+            <p>Ask the AI about characters, factions, locations, and hidden secrets.</p>
+          </div>
+          <div class="hero-panel-card">
+            <div class="hero-panel-title">Save & export</div>
+            <p>Store your favorite worlds and download polished notes anytime.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="features">
+        <div class="section-head">
+          <h2>Designed for every storyteller</h2>
+          <p>Features that make fantasy creation fast, immersive, and easy to manage.</p>
+        </div>
+        <div class="features-grid">
+          <article class="feature-card">
+            <h3>Full world blueprints</h3>
+            <p>Generate geography, history, creatures, magic systems, and plot hooks in one go.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Interactive chatbot</h3>
+            <p>Chat with the world to explore lore and receive consistent storytelling answers.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Account-based saving</h3>
+            <p>Sign in to save worlds and pick up right where you left off.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Social login feel</h3>
+            <p>Login UI includes Google and GitHub-style social buttons for modern onboarding.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="app-section" class="tool-section" hidden>
+        <div class="grid">
+          <div class="panel left">
+            <div class="card hero">
+              <div class="hero-title">Describe your world idea</div>
+              <div class="hero-sub">Example: “A moonlit archipelago ruled by drowned kings and storm-witches.”</div>
+              <div class="hero-form">
+                <input id="worldIdea" class="input" placeholder="Describe your world idea..." autocomplete="off" />
+                <button id="generateBtn" class="btn primary" type="button">Generate</button>
+              </div>
+              <div id="genStatus" class="status"></div>
+            </div>
+
+            <div class="grid nested-grid">
+              <div class="card">
+                <div class="card-h">World Name</div>
+                <div id="worldName" class="card-b muted">No world yet.</div>
+              </div>
+              <div class="card">
+                <div class="card-h">Geography</div>
+                <ul id="geography" class="card-list"></ul>
+              </div>
+              <div class="card">
+                <div class="card-h">History</div>
+                <ul id="history" class="card-list"></ul>
+              </div>
+              <div class="card">
+                <div class="card-h">Creatures</div>
+                <div id="creatures" class="creature-list"></div>
+              </div>
+              <div class="card">
+                <div class="card-h">Powers / Magic System</div>
+                <ul id="magic" class="card-list"></ul>
+              </div>
+              <div class="card">
+                <div class="card-h">Plot Hooks</div>
+                <ul id="hooks" class="card-list"></ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel right">
+            <div class="chat-shell">
+              <div class="chat-header">
+                <div>
+                  <div class="chat-title">Lore Chat</div>
+                  <div class="chat-subtitle">Ask questions; the chatbot remembers this session.</div>
+                </div>
+                <div class="chat-meta">
+                  <span id="pill" class="pill">No world</span>
+                </div>
+              </div>
+
+              <div class="tool-actions">
+                <button id="saveBtn" class="btn ghost" type="button">Save</button>
+                <button id="downloadBtn" class="btn ghost" type="button">Download</button>
+              </div>
+
+              <div id="chat" class="chat"></div>
+
+              <div class="chat-input">
+                <textarea id="chatBox" class="textarea" rows="1" placeholder="Ask about the world... (Enter to send, Shift+Enter for new line)"></textarea>
+                <button id="sendBtn" class="btn primary" type="button">Send</button>
+              </div>
+
+              <div id="chatStatus" class="status"></div>
+            </div>
+
+            <div class="card side">
+              <div class="card-h">Saved Worlds</div>
+              <div id="savedWorlds" class="saved"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ═══════════════════════════════════ AUTH MODAL ═══════════════════════════ -->
+    <section id="auth-modal" class="auth-overlay" aria-modal="true" role="dialog" hidden>
+      <div class="auth-card">
+        <button class="auth-close" id="auth-close-btn" aria-label="Close">&times;</button>
+        <div class="auth-rune">✦</div>
+        <h2 class="auth-title" id="auth-modal-title">Enter the Realm</h2>
+        <p class="auth-sub">Sign in to save and revisit your worlds</p>
+
+        <div class="auth-providers">
+          <a href="/auth/google" class="oauth-btn google-btn">
+            <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.5 30.2 0 24 0 14.7 0 6.8 5.4 2.9 13.3l7.8 6.1C12.6 13 17.9 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v8.7h12.4c-.5 2.8-2.1 5.2-4.5 6.8l7 5.4c4.1-3.8 6.5-9.4 6.5-16.3z"/>
+              <path fill="#FBBC05" d="M10.7 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6l-7.8-6.1A24 24 0 0 0 0 24c0 3.8.9 7.4 2.5 10.6l8.2-6z"/>
+              <path fill="#34A853" d="M24 48c6.2 0 11.5-2 15.3-5.5l-7-5.4c-2 1.4-4.7 2.2-8.3 2.2-6.1 0-11.4-4.1-13.3-9.7l-8.2 6C6.8 42.6 14.7 48 24 48z"/>
+            </svg>
+            Continue with Google
+          </a>
+
+          <a href="/auth/github" class="oauth-btn github-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            Continue with GitHub
+          </a>
+        </div>
+
+        <p class="auth-note">No password needed. We never post anything on your behalf.</p>
+      </div>
+    </section>
+
+    <style>
+      .auth-overlay {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(0,0,0,.72);
+        backdrop-filter: blur(6px);
+        animation: auth-fade-in .22s ease;
+      }
+      .auth-overlay[hidden] { display: none; }
+      @keyframes auth-fade-in { from { opacity:0 } to { opacity:1 } }
+
+      .auth-card {
+        position: relative;
+        background: linear-gradient(155deg, #1a1225 0%, #0d0b14 100%);
+        border: 1px solid rgba(180,130,255,.18);
+        border-radius: 18px;
+        padding: 48px 40px 36px;
+        width: min(420px, 92vw);
+        text-align: center;
+        box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04);
+        animation: auth-slide-up .28s cubic-bezier(.16,1,.3,1);
+      }
+      @keyframes auth-slide-up {
+        from { transform: translateY(24px); opacity:0 }
+        to   { transform: translateY(0);    opacity:1 }
+      }
+
+      .auth-close {
+        position: absolute; top: 14px; right: 16px;
+        background: none; border: none; cursor: pointer;
+        color: rgba(255,255,255,.4); font-size: 22px; line-height: 1;
+        transition: color .15s;
+      }
+      .auth-close:hover { color: #fff; }
+
+      .auth-rune { font-size: 28px; margin-bottom: 8px; filter: drop-shadow(0 0 8px #a855f7); }
+      .auth-title {
+        font-family: 'Cinzel', 'Palatino Linotype', serif;
+        font-size: 1.6rem; font-weight: 700;
+        color: #e8d5ff; margin: 0 0 6px; letter-spacing: .03em;
+      }
+      .auth-sub { color: rgba(200,180,240,.55); font-size: .88rem; margin: 0 0 32px; }
+
+      .auth-providers { display: flex; flex-direction: column; gap: 12px; }
+
+      .oauth-btn {
+        display: flex; align-items: center; justify-content: center; gap: 12px;
+        padding: 13px 20px; border-radius: 10px;
+        font-size: .95rem; font-weight: 600; text-decoration: none;
+        transition: transform .15s, box-shadow .15s, filter .15s;
+        cursor: pointer; border: none;
+      }
+      .oauth-btn:hover { transform: translateY(-2px); filter: brightness(1.07); }
+      .oauth-btn:active { transform: translateY(0); }
+
+      .google-btn {
+        background: #fff; color: #3c3c3c;
+        box-shadow: 0 2px 12px rgba(0,0,0,.35);
+      }
+      .github-btn {
+        background: #24292f; color: #fff;
+        box-shadow: 0 2px 12px rgba(0,0,0,.5);
+        border: 1px solid rgba(255,255,255,.1);
+      }
+
+      .auth-note {
+        margin-top: 24px; font-size: .78rem;
+        color: rgba(180,160,220,.35); line-height: 1.5;
+      }
+
+      .user-pill {
+        display: flex; align-items: center; gap: 8px;
+        background: rgba(168,85,247,.12);
+        border: 1px solid rgba(168,85,247,.25);
+        border-radius: 999px; padding: 4px 14px 4px 6px;
+      }
+      .user-pill[hidden] { display: none; }
+      .user-avatar { border-radius: 50%; object-fit: cover; }
+      .user-name { font-size: .85rem; color: #d8b4fe; font-weight: 500; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .logout-link { color: rgba(200,170,255,.5); font-size: .9rem; text-decoration: none; transition: color .15s; }
+      .logout-link:hover { color: #f87171; }
+    </style>
+
+    <script>
+      (() => {
+        const modal = document.getElementById("auth-modal");
+        const closeBtn = document.getElementById("auth-close-btn");
+        const pill = document.getElementById("user-pill");
+        const avatar = document.getElementById("user-avatar");
+        const nameEl = document.getElementById("user-name");
+
+        window.openAuthModal = () => { modal.hidden = false; };
+
+        function closeModal() { modal.hidden = true; }
+        closeBtn.addEventListener("click", closeModal);
+        modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+        async function checkUser() {
+          try {
+            const res = await fetch("/auth/user");
+            const data = await res.json();
+            if (data.logged_in) {
+              showUserPill(data.user);
+            }
+          } catch (_) {}
+        }
+
+        function showUserPill(user) {
+          if (user.picture) {
+            avatar.src = user.picture;
+            avatar.hidden = false;
+          } else {
+            avatar.hidden = true;
+          }
+          nameEl.textContent = user.name || user.email || "Adventurer";
+          pill.hidden = false;
+
+          document.querySelectorAll(".btn-login, .btn-signup, #loginBtn, #signupBtn, #loginBtnHero, #signupBtnHero")
+            .forEach((el) => { el.hidden = true; });
+        }
+
+        checkUser();
+
+        document.querySelectorAll("[data-auth-trigger]").forEach((el) => {
+          el.addEventListener("click", (e) => {
+            e.preventDefault();
+            openAuthModal();
+          });
+        });
+      })();
+    </script>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js"></script>
+  </body>
+</html>
+
