@@ -1,36 +1,31 @@
 """
-auth.py — Google & GitHub OAuth for AI Fantasy World Designer
-Drop this file into backend/ and register the blueprint in app.py.
+auth.py — Real Google & GitHub OAuth for AI Fantasy World Designer
+Registered as a Blueprint in app.py via init_oauth() + app.register_blueprint(auth_bp).
 """
 
 import os
-from flask import Blueprint, redirect, url_for, session, jsonify, request
+from flask import Blueprint, redirect, session, jsonify
 from authlib.integrations.flask_client import OAuth
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
-
-# ── OAuth instance (attached to app in init_oauth) ─────────────────────────
 oauth = OAuth()
 
 
 def init_oauth(app):
-    """Call this once in app.py after creating the Flask app."""
+    """Call once in app.py AFTER secret_key and Session(app) are configured."""
     oauth.init_app(app)
 
-    # ── Google ──────────────────────────────────────────────────────────────
     oauth.register(
         name="google",
         client_id=os.environ.get("GOOGLE_CLIENT_ID"),
         client_secret=os.environ.get("GOOGLE_CLIENT_SECRET"),
-        # OpenID-Connect discovery doc – handles all endpoint URLs automatically
         server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
         client_kwargs={
             "scope": "openid email profile",
-            "prompt": "select_account",  # always show account chooser
+            "prompt": "select_account",
         },
     )
 
-    # ── GitHub ──────────────────────────────────────────────────────────────
     oauth.register(
         name="github",
         client_id=os.environ.get("GITHUB_CLIENT_ID"),
@@ -42,12 +37,8 @@ def init_oauth(app):
     )
 
 
-# ── Helpers ─────────────────────────────────────────────────────────────────
-
-
-def _save_user_to_session(
-    name: str, email: str | None, picture: str | None, provider: str
-):
+def _save_user_to_session(name, email, picture, provider):
+    """Unified session format shared by OAuth and password login."""
     session["user"] = {
         "name": name,
         "email": email,
@@ -58,13 +49,10 @@ def _save_user_to_session(
 
 
 def _oauth_base_url() -> str:
-    return os.environ.get("OAUTH_REDIRECT_BASE_URL", "http://localhost:5000").rstrip(
-        "/"
-    )
+    return os.environ.get("OAUTH_REDIRECT_BASE_URL", "http://localhost:5000").rstrip("/")
 
 
-# ── Google routes ────────────────────────────────────────────────────────────
-
+# ── Google ────────────────────────────────────────────────────────────────────
 
 @auth_bp.route("/google")
 def google_login():
@@ -75,11 +63,7 @@ def google_login():
 @auth_bp.route("/google/callback")
 def google_callback():
     token = oauth.google.authorize_access_token()
-    user_info = token.get("userinfo")  # included automatically via OIDC
-    if not user_info:
-        # Fallback: fetch from userinfo endpoint
-        user_info = oauth.google.userinfo()
-
+    user_info = token.get("userinfo") or oauth.google.userinfo()
     _save_user_to_session(
         name=user_info.get("name") or user_info.get("email", "Adventurer"),
         email=user_info.get("email"),
@@ -89,8 +73,7 @@ def google_callback():
     return redirect("/")
 
 
-# ── GitHub routes ─────────────────────────────────────────────────────────────
-
+# ── GitHub ────────────────────────────────────────────────────────────────────
 
 @auth_bp.route("/github")
 def github_login():
@@ -101,17 +84,13 @@ def github_login():
 @auth_bp.route("/github/callback")
 def github_callback():
     token = oauth.github.authorize_access_token()
-
-    # Basic profile
     resp = oauth.github.get("user", token=token)
     user_info = resp.json()
 
-    # GitHub doesn't always expose email in the profile; fetch it separately
     email = user_info.get("email")
     if not email:
         emails_resp = oauth.github.get("user/emails", token=token)
         emails = emails_resp.json()
-        # Pick the primary verified address
         email = next(
             (e["email"] for e in emails if e.get("primary") and e.get("verified")),
             None,
@@ -126,22 +105,24 @@ def github_callback():
     return redirect("/")
 
 
-# ── Session / logout ──────────────────────────────────────────────────────────
-
-
-@auth_bp.route("/logout", methods=["POST", "GET"])
-def logout():
-    session.clear()
-    return redirect("/")
-
+# ── User state & logout ───────────────────────────────────────────────────────
 
 @auth_bp.route("/user")
 def current_user():
     """
-    Frontend polls this to check login state.
-    Returns: { logged_in: bool, user?: { name, email, picture, provider } }
+    Frontend calls this on every page load to check login state.
+    Works for both OAuth users (session["user"]) and password users
+    (session["user"] is also set by _log_in_user in app.py).
     """
     user = session.get("user")
-    if user:
+    if user and user.get("logged_in"):
         return jsonify({"logged_in": True, "user": user})
-    return jsonify({"logged_in": False})
+    return jsonify({"logged_in": False, "user": None})
+
+
+@auth_bp.route("/logout", methods=["GET", "POST"])
+def logout():
+    """Clears all session auth keys and redirects home."""
+    session.pop("user", None)
+    session.pop("user_id", None)
+    return redirect("/")

@@ -3,129 +3,203 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Fantasy World Designer</title>
+    <title>Loreforge — AI Fantasy World Designer</title>
+    <meta name="description" content="Transform a single idea into a complete fantasy world with geography, lore, creatures, and magic — powered by AI." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="bg"></div>
+    <div class="bg" aria-hidden="true"></div>
+
+    <!-- ══════════════════════════ TOPBAR ══════════════════════════ -->
     <header class="topbar">
       <div class="brand">
-        <div class="sigil" aria-hidden="true"></div>
+        <!-- SVG Logo -->
+        <svg class="brand-logo" width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <radialGradient id="orb-grad" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stop-color="#c4b5fd"/>
+              <stop offset="60%" stop-color="#7c3aed"/>
+              <stop offset="100%" stop-color="#1e1b4b"/>
+            </radialGradient>
+            <radialGradient id="glow-grad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.5"/>
+              <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="orb-blur">
+              <feGaussianBlur stdDeviation="1.5"/>
+            </filter>
+          </defs>
+          <!-- Glow halo -->
+          <circle cx="19" cy="19" r="17" fill="url(#glow-grad)" filter="url(#orb-blur)"/>
+          <!-- Main orb -->
+          <circle cx="19" cy="19" r="13" fill="url(#orb-grad)"/>
+          <!-- Shine highlight -->
+          <ellipse cx="15" cy="14" rx="4" ry="3" fill="white" fill-opacity="0.22" transform="rotate(-20 15 14)"/>
+          <!-- Inner rune cross -->
+          <line x1="19" y1="10" x2="19" y2="28" stroke="white" stroke-opacity="0.3" stroke-width="1" stroke-linecap="round"/>
+          <line x1="11" y1="19" x2="27" y2="19" stroke="white" stroke-opacity="0.3" stroke-width="1" stroke-linecap="round"/>
+          <!-- Diamond spark -->
+          <polygon points="19,7 20.4,10.6 24,12 20.4,13.4 19,17 17.6,13.4 14,12 17.6,10.6" fill="white" fill-opacity="0.85"/>
+          <!-- Outer ring -->
+          <circle cx="19" cy="19" r="16" stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1" fill="none"/>
+        </svg>
         <div>
-          <div class="brand-title">AI Fantasy World Designer</div>
-          <div class="brand-subtitle">Generate worlds. Speak to their lore.</div>
+          <div class="brand-title">Loreforge</div>
+          <div class="brand-subtitle">AI World Designer</div>
         </div>
       </div>
 
       <div class="topbar-actions">
-        <button id="themeToggle" class="btn ghost" type="button" title="Toggle theme">Theme</button>
-        <button id="guestBtn" class="btn ghost" type="button">Continue as guest</button>
-        <button id="loginBtn" class="btn ghost" type="button" data-auth-trigger>Login</button>
-        <button id="signupBtn" class="btn ghost" type="button" data-auth-trigger>Sign Up</button>
-        <button id="logoutBtn" class="btn ghost" type="button" hidden>Logout</button>
+        <button id="themeToggle" class="btn ghost icon-btn" type="button" title="Toggle theme" aria-label="Toggle light/dark theme">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+        <button id="guestBtn" class="btn ghost" type="button">Continue as Guest</button>
+        <button id="loginBtn" class="btn ghost" type="button" data-auth-trigger>Log In</button>
+        <button id="signupBtn" class="btn primary" type="button" data-auth-trigger>Get Started</button>
+        <button id="logoutBtn" class="btn ghost" type="button" hidden>Log Out</button>
         <div id="user-pill" class="user-pill" hidden>
-          <img id="user-avatar" class="user-avatar" src="" alt="avatar" width="28" height="28" />
+          <img id="user-avatar" class="user-avatar" src="" alt="User avatar" width="28" height="28" hidden />
           <span id="user-name" class="user-name"></span>
-          <a href="/auth/logout" class="logout-link" title="Sign out">↩</a>
         </div>
       </div>
     </header>
 
     <main class="page">
+
+      <!-- ══════════════════════════ HERO ══════════════════════════ -->
       <section id="hero-banner" class="hero-banner">
         <div class="hero-copy">
-          <div class="eyebrow">Fantasy AI Studio</div>
-          <h1>Build fantasy worlds, chat with lore, and save your stories.</h1>
-          <p>Use the AI assistant to generate immersive kingdoms, creatures, magic systems, and narrative hooks in seconds.</p>
+          <div class="eyebrow">✦ Powered by Gemini AI</div>
+          <h1>Your imagination.<br/>Infinite worlds.</h1>
+          <p class="hero-desc">Describe any world in a sentence. Loreforge builds the geography, history, creatures, magic system, and story hooks — instantly. Then chat with your world's lore like a living oracle.</p>
           <div class="hero-actions">
-            <button id="signupBtnHero" class="btn primary" type="button" data-auth-trigger>Create account</button>
-            <button id="loginBtnHero" class="btn ghost" type="button" data-auth-trigger>Login</button>
-            <button id="guestBtnHero" class="btn ghost" type="button">Continue as guest</button>
+            <button id="signupBtnHero" class="btn primary btn-lg" type="button" data-auth-trigger>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Start Building Free
+            </button>
+            <button id="loginBtnHero" class="btn ghost btn-lg" type="button" data-auth-trigger>Log In</button>
+            <button id="guestBtnHero" class="btn ghost btn-lg" type="button">Try as Guest</button>
           </div>
+          <p class="hero-footnote">No credit card required &nbsp;·&nbsp; Google or GitHub login &nbsp;·&nbsp; Instant access</p>
         </div>
         <div class="hero-panel">
           <div class="hero-panel-card">
-            <div class="hero-panel-title">Instant world generation</div>
-            <p>Turn your idea into a complete fantasy world blueprint with one prompt.</p>
+            <div class="hero-panel-icon">🗺️</div>
+            <div class="hero-panel-title">One prompt, a whole world</div>
+            <p>Type your idea — Loreforge returns a full blueprint with six sections of rich lore.</p>
           </div>
           <div class="hero-panel-card">
+            <div class="hero-panel-icon">💬</div>
             <div class="hero-panel-title">Chat with your lore</div>
-            <p>Ask the AI about characters, factions, locations, and hidden secrets.</p>
+            <p>Ask anything about your world. The AI remembers every detail you generated.</p>
           </div>
           <div class="hero-panel-card">
-            <div class="hero-panel-title">Save & export</div>
-            <p>Store your favorite worlds and download polished notes anytime.</p>
+            <div class="hero-panel-icon">📦</div>
+            <div class="hero-panel-title">Save & export anywhere</div>
+            <p>Keep your worlds in your account and download them as formatted text files.</p>
           </div>
         </div>
       </section>
 
+      <!-- ══════════════════════════ FEATURES ══════════════════════════ -->
       <section id="features" class="features">
         <div class="section-head">
-          <h2>Designed for every storyteller</h2>
-          <p>Features that make fantasy creation fast, immersive, and easy to manage.</p>
+          <div class="eyebrow">✦ Everything you need</div>
+          <h2>Built for writers, game masters & storytellers</h2>
+          <p class="section-sub">Everything a world-builder needs in one place — no writing experience required.</p>
         </div>
         <div class="features-grid">
           <article class="feature-card">
-            <h3>Full world blueprints</h3>
-            <p>Generate geography, history, creatures, magic systems, and plot hooks in one go.</p>
+            <div class="feature-icon">🏔️</div>
+            <h3>Six-section world blueprint</h3>
+            <p>Geography, history, creatures, magic system, plot hooks, and tone — generated in one AI call.</p>
           </article>
           <article class="feature-card">
-            <h3>Interactive chatbot</h3>
-            <p>Chat with the world to explore lore and receive consistent storytelling answers.</p>
+            <div class="feature-icon">🧠</div>
+            <h3>Context-aware lore chat</h3>
+            <p>Your chatbot knows the full world context and stays strictly in the fantasy domain — no off-topic drift.</p>
           </article>
           <article class="feature-card">
-            <h3>Account-based saving</h3>
-            <p>Sign in to save worlds and pick up right where you left off.</p>
+            <div class="feature-icon">🔐</div>
+            <h3>Secure accounts</h3>
+            <p>Sign in with Google or GitHub in one click. Your worlds are private and saved to your account.</p>
           </article>
           <article class="feature-card">
-            <h3>Social login feel</h3>
-            <p>Login UI includes Google and GitHub-style social buttons for modern onboarding.</p>
+            <div class="feature-icon">🃏</div>
+            <h3>Flashcard lore review</h3>
+            <p>Flip through your world's creatures and lore as interactive flashcards — great for game prep.</p>
           </article>
         </div>
       </section>
 
+      <!-- ══════════════════════════ APP ══════════════════════════ -->
       <section id="app-section" class="tool-section" hidden>
-        <div class="grid">
+        <div class="app-grid">
           <div class="panel left">
-            <div class="card hero">
-              <div class="hero-title">Describe your world idea</div>
-              <div class="hero-sub">Example: “A moonlit archipelago ruled by drowned kings and storm-witches.”</div>
+            <div class="card generate-card">
+              <div class="generate-header">
+                <svg class="generate-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <div>
+                  <div class="hero-title">Forge a new world</div>
+                  <div class="hero-sub">Try: "An ocean world where merfolk wage war over sunken libraries of forbidden magic."</div>
+                </div>
+              </div>
               <div class="hero-form">
-                <input id="worldIdea" class="input" placeholder="Describe your world idea..." autocomplete="off" />
+                <input id="worldIdea" class="input" placeholder="Describe your world idea…" autocomplete="off" />
                 <button id="generateBtn" class="btn primary" type="button">Generate</button>
               </div>
               <div id="genStatus" class="status"></div>
             </div>
 
-            <div class="grid nested-grid">
-              <div class="card">
-                <div class="card-h">World Name</div>
-                <div id="worldName" class="card-b muted">No world yet.</div>
+            <div class="world-grid">
+              <div class="card world-card span-full">
+                <div class="card-h">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  World Name
+                </div>
+                <div id="worldName" class="card-b muted world-name-display">No world forged yet.</div>
               </div>
-              <div class="card">
-                <div class="card-h">Geography</div>
+              <div class="card world-card">
+                <div class="card-h">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l9-13 9 13H3z"/></svg>
+                  Geography
+                </div>
                 <ul id="geography" class="card-list"></ul>
               </div>
-              <div class="card">
-                <div class="card-h">History</div>
+              <div class="card world-card">
+                <div class="card-h">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  History
+                </div>
                 <ul id="history" class="card-list"></ul>
               </div>
-              <div class="card">
-                <div class="card-h">Creatures</div>
+              <div class="card world-card">
+                <div class="card-h">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5zM20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5zM3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14zM14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5zM15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zM10 9.5C10 8.67 9.33 8 8.5 8h-5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5zM8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg>
+                  Creatures
+                </div>
                 <div id="creatures" class="creature-list"></div>
               </div>
-              <div class="card">
-                <div class="card-h">Powers / Magic System</div>
+              <div class="card world-card">
+                <div class="card-h">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  Magic System
+                </div>
                 <ul id="magic" class="card-list"></ul>
               </div>
-              <div class="card">
-                <div class="card-h">Plot Hooks</div>
+              <div class="card world-card">
+                <div class="card-h">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Plot Hooks
+                </div>
                 <ul id="hooks" class="card-list"></ul>
               </div>
             </div>
@@ -135,31 +209,41 @@
             <div class="chat-shell">
               <div class="chat-header">
                 <div>
-                  <div class="chat-title">Lore Chat</div>
-                  <div class="chat-subtitle">Ask questions; the chatbot remembers this session.</div>
+                  <div class="chat-title">Lore Oracle</div>
+                  <div class="chat-subtitle">Ask anything — the AI remembers your entire world.</div>
                 </div>
-                <div class="chat-meta">
-                  <span id="pill" class="pill">No world</span>
-                </div>
+                <span id="pill" class="pill">No world</span>
               </div>
 
               <div class="tool-actions">
-                <button id="saveBtn" class="btn ghost" type="button">Save</button>
-                <button id="downloadBtn" class="btn ghost" type="button">Download</button>
+                <button id="saveBtn" class="btn ghost btn-sm" type="button">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  Save World
+                </button>
+                <button id="downloadBtn" class="btn ghost btn-sm" type="button">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download
+                </button>
+                <button id="flashcardBtn" class="btn ghost btn-sm" type="button" hidden>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                  Flashcards
+                </button>
               </div>
 
               <div id="chat" class="chat"></div>
 
               <div class="chat-input">
-                <textarea id="chatBox" class="textarea" rows="1" placeholder="Ask about the world... (Enter to send, Shift+Enter for new line)"></textarea>
+                <textarea id="chatBox" class="textarea" rows="1" placeholder="Ask about the world… (Enter to send, Shift+Enter for new line)"></textarea>
                 <button id="sendBtn" class="btn primary" type="button">Send</button>
               </div>
-
               <div id="chatStatus" class="status"></div>
             </div>
 
             <div class="card side">
-              <div class="card-h">Saved Worlds</div>
+              <div class="card-h">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+                Saved Worlds
+              </div>
               <div id="savedWorlds" class="saved"></div>
             </div>
           </div>
@@ -167,17 +251,31 @@
       </section>
     </main>
 
-    <!-- ═══════════════════════════════════ AUTH MODAL ═══════════════════════════ -->
+    <!-- ══════════════════════════ AUTH MODAL ══════════════════════════ -->
     <section id="auth-modal" class="auth-overlay" aria-modal="true" role="dialog" hidden>
       <div class="auth-card">
         <button class="auth-close" id="auth-close-btn" aria-label="Close">&times;</button>
-        <div class="auth-rune">✦</div>
-        <h2 class="auth-title" id="auth-modal-title">Enter the Realm</h2>
-        <p class="auth-sub">Sign in to save and revisit your worlds</p>
+        <svg class="auth-logo" width="44" height="44" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <radialGradient id="orb-grad2" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stop-color="#c4b5fd"/>
+              <stop offset="60%" stop-color="#7c3aed"/>
+              <stop offset="100%" stop-color="#1e1b4b"/>
+            </radialGradient>
+          </defs>
+          <circle cx="19" cy="19" r="13" fill="url(#orb-grad2)"/>
+          <ellipse cx="15" cy="14" rx="4" ry="3" fill="white" fill-opacity="0.22" transform="rotate(-20 15 14)"/>
+          <line x1="19" y1="10" x2="19" y2="28" stroke="white" stroke-opacity="0.3" stroke-width="1" stroke-linecap="round"/>
+          <line x1="11" y1="19" x2="27" y2="19" stroke="white" stroke-opacity="0.3" stroke-width="1" stroke-linecap="round"/>
+          <polygon points="19,7 20.4,10.6 24,12 20.4,13.4 19,17 17.6,13.4 14,12 17.6,10.6" fill="white" fill-opacity="0.85"/>
+          <circle cx="19" cy="19" r="16" stroke="#a78bfa" stroke-opacity="0.5" stroke-width="1" fill="none"/>
+        </svg>
+        <h2 class="auth-title">Welcome to Loreforge</h2>
+        <p class="auth-sub">Sign in to save your worlds and access them anytime</p>
 
         <div class="auth-providers">
           <a href="/auth/google" class="oauth-btn google-btn">
-            <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
               <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.5 30.2 0 24 0 14.7 0 6.8 5.4 2.9 13.3l7.8 6.1C12.6 13 17.9 9.5 24 9.5z"/>
               <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v8.7h12.4c-.5 2.8-2.1 5.2-4.5 6.8l7 5.4c4.1-3.8 6.5-9.4 6.5-16.3z"/>
               <path fill="#FBBC05" d="M10.7 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6l-7.8-6.1A24 24 0 0 0 0 24c0 3.8.9 7.4 2.5 10.6l8.2-6z"/>
@@ -185,154 +283,52 @@
             </svg>
             Continue with Google
           </a>
-
           <a href="/auth/github" class="oauth-btn github-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.13 3 .4 2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/>
             </svg>
             Continue with GitHub
           </a>
         </div>
-
-        <p class="auth-note">No password needed. We never post anything on your behalf.</p>
+        <p class="auth-note">One-click sign-in. We never post on your behalf.</p>
       </div>
     </section>
 
-    <style>
-      .auth-overlay {
-        position: fixed; inset: 0; z-index: 9999;
-        display: flex; align-items: center; justify-content: center;
-        background: rgba(0,0,0,.72);
-        backdrop-filter: blur(6px);
-        animation: auth-fade-in .22s ease;
-      }
-      .auth-overlay[hidden] { display: none; }
-      @keyframes auth-fade-in { from { opacity:0 } to { opacity:1 } }
+    <!-- ══════════════════════════ FLASHCARD MODAL ══════════════════════════ -->
+    <section id="flashcard-modal" class="modal hidden" aria-modal="true" role="dialog">
+      <div class="modal-backdrop flashcard-backdrop"></div>
+      <div class="modal-content flashcard-content">
+        <button class="modal-close" id="flashcard-close" aria-label="Close">&times;</button>
+        <div class="modal-header">
+          <h2>Lore Flashcards</h2>
+          <p>Click any card to flip and reveal the lore.</p>
+        </div>
+        <div id="flashcard-grid" class="flashcard-grid"></div>
+      </div>
+    </section>
 
-      .auth-card {
-        position: relative;
-        background: linear-gradient(155deg, #1a1225 0%, #0d0b14 100%);
-        border: 1px solid rgba(180,130,255,.18);
-        border-radius: 18px;
-        padding: 48px 40px 36px;
-        width: min(420px, 92vw);
-        text-align: center;
-        box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04);
-        animation: auth-slide-up .28s cubic-bezier(.16,1,.3,1);
-      }
-      @keyframes auth-slide-up {
-        from { transform: translateY(24px); opacity:0 }
-        to   { transform: translateY(0);    opacity:1 }
-      }
-
-      .auth-close {
-        position: absolute; top: 14px; right: 16px;
-        background: none; border: none; cursor: pointer;
-        color: rgba(255,255,255,.4); font-size: 22px; line-height: 1;
-        transition: color .15s;
-      }
-      .auth-close:hover { color: #fff; }
-
-      .auth-rune { font-size: 28px; margin-bottom: 8px; filter: drop-shadow(0 0 8px #a855f7); }
-      .auth-title {
-        font-family: 'Cinzel', 'Palatino Linotype', serif;
-        font-size: 1.6rem; font-weight: 700;
-        color: #e8d5ff; margin: 0 0 6px; letter-spacing: .03em;
-      }
-      .auth-sub { color: rgba(200,180,240,.55); font-size: .88rem; margin: 0 0 32px; }
-
-      .auth-providers { display: flex; flex-direction: column; gap: 12px; }
-
-      .oauth-btn {
-        display: flex; align-items: center; justify-content: center; gap: 12px;
-        padding: 13px 20px; border-radius: 10px;
-        font-size: .95rem; font-weight: 600; text-decoration: none;
-        transition: transform .15s, box-shadow .15s, filter .15s;
-        cursor: pointer; border: none;
-      }
-      .oauth-btn:hover { transform: translateY(-2px); filter: brightness(1.07); }
-      .oauth-btn:active { transform: translateY(0); }
-
-      .google-btn {
-        background: #fff; color: #3c3c3c;
-        box-shadow: 0 2px 12px rgba(0,0,0,.35);
-      }
-      .github-btn {
-        background: #24292f; color: #fff;
-        box-shadow: 0 2px 12px rgba(0,0,0,.5);
-        border: 1px solid rgba(255,255,255,.1);
-      }
-
-      .auth-note {
-        margin-top: 24px; font-size: .78rem;
-        color: rgba(180,160,220,.35); line-height: 1.5;
-      }
-
-      .user-pill {
-        display: flex; align-items: center; gap: 8px;
-        background: rgba(168,85,247,.12);
-        border: 1px solid rgba(168,85,247,.25);
-        border-radius: 999px; padding: 4px 14px 4px 6px;
-      }
-      .user-pill[hidden] { display: none; }
-      .user-avatar { border-radius: 50%; object-fit: cover; }
-      .user-name { font-size: .85rem; color: #d8b4fe; font-weight: 500; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .logout-link { color: rgba(200,170,255,.5); font-size: .9rem; text-decoration: none; transition: color .15s; }
-      .logout-link:hover { color: #f87171; }
-    </style>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script>
+      // ── Auth modal + triggers (runs before app.js) ──────────────────────────
       (() => {
-        const modal = document.getElementById("auth-modal");
+        const modal   = document.getElementById("auth-modal");
         const closeBtn = document.getElementById("auth-close-btn");
-        const pill = document.getElementById("user-pill");
-        const avatar = document.getElementById("user-avatar");
-        const nameEl = document.getElementById("user-name");
 
         window.openAuthModal = () => { modal.hidden = false; };
-
         function closeModal() { modal.hidden = true; }
+
         closeBtn.addEventListener("click", closeModal);
-        modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
-        document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+        modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+        document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 
-        async function checkUser() {
-          try {
-            const res = await fetch("/auth/user");
-            const data = await res.json();
-            if (data.logged_in) {
-              showUserPill(data.user);
-            }
-          } catch (_) {}
-        }
-
-        function showUserPill(user) {
-          if (user.picture) {
-            avatar.src = user.picture;
-            avatar.hidden = false;
-          } else {
-            avatar.hidden = true;
-          }
-          nameEl.textContent = user.name || user.email || "Adventurer";
-          pill.hidden = false;
-
-          document.querySelectorAll(".btn-login, .btn-signup, #loginBtn, #signupBtn, #loginBtnHero, #signupBtnHero")
-            .forEach((el) => { el.hidden = true; });
-        }
-
-        checkUser();
-
-        document.querySelectorAll("[data-auth-trigger]").forEach((el) => {
-          el.addEventListener("click", (e) => {
-            e.preventDefault();
-            openAuthModal();
-          });
+        // Wire every [data-auth-trigger] button to open the modal
+        document.querySelectorAll("[data-auth-trigger]").forEach(el => {
+          el.addEventListener("click", e => { e.preventDefault(); openAuthModal(); });
         });
       })();
     </script>
 
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="/app.js"></script>
+    <script src="/app.js?v=3"></script>
   </body>
 </html>
-

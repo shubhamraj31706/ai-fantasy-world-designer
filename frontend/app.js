@@ -25,6 +25,11 @@ const els = {
   signupBtnHero: document.getElementById("signupBtnHero"),
   guestBtnHero: document.getElementById("guestBtnHero"),
   toast: document.getElementById("toast"),
+  // Add these inside the const els = { ... } object
+  flashcardBtn: document.getElementById("flashcardBtn"),
+  flashcardModal: document.getElementById("flashcard-modal"),
+  flashcardClose: document.getElementById("flashcard-close"),
+  flashcardGrid: document.getElementById("flashcard-grid"),
 };
 
 let currentWorld = null;
@@ -35,7 +40,8 @@ let sessionStarted = false;
 function toast(msg, kind = "info") {
   els.toast.textContent = msg;
   els.toast.classList.add("show");
-  els.toast.style.borderColor = kind === "err" ? "rgba(255,92,124,.55)" : "rgba(184,140,255,.35)";
+  els.toast.style.borderColor =
+    kind === "err" ? "rgba(255,92,124,.55)" : "rgba(184,140,255,.35)";
   setTimeout(() => els.toast.classList.remove("show"), 2200);
 }
 
@@ -83,9 +89,7 @@ function showApp() {
   document.getElementById("features").hidden = true;
   document.getElementById("app-section").hidden = false;
   const target = document.getElementById("worldIdea");
-  if (target) {
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function setStatus(el, msg, isErr = false) {
@@ -131,13 +135,14 @@ function renderCreatures(container, creatures) {
 
 function renderWorld(world) {
   currentWorld = world;
-  els.worldName.textContent = world?.world_name ? world.world_name : "Untitled";
+  els.worldName.textContent = world?.world_name || "Untitled";
   renderList(els.geography, world?.geography);
   renderList(els.history, world?.history);
   renderCreatures(els.creatures, world?.creatures);
   renderList(els.magic, world?.magic_system);
   renderList(els.hooks, world?.plot_hooks);
-  els.pill.textContent = world?.world_name ? world.world_name : "World loaded";
+  els.pill.textContent = world?.world_name || "World loaded";
+  els.flashcardBtn.hidden = false;
 }
 
 function appendMessage(role, text) {
@@ -176,33 +181,29 @@ function continueAsGuest() {
 async function fetchCurrentUser() {
   try {
     const data = await api("/auth/user", { method: "GET" });
-    currentUser = data.logged_in ? data.user : null;
+    if (data.logged_in && data.user) {
+      currentUser = data.user;
+      sessionStarted = true;
+      updateAuthUI();
+      showApp();
+    } else {
+      sessionStarted = false;
+      currentUser = null;
+      updateAuthUI();
+      showLanding();
+    }
   } catch (e) {
-    currentUser = null;
-  }
-
-  if (currentUser) {
-    sessionStarted = true;
-    updateAuthUI();
-    showApp();
-  } else {
     sessionStarted = false;
+    currentUser = null;
     updateAuthUI();
     showLanding();
   }
 }
 
-async function handleLogout() {
-  try {
-    await api("/api/auth/logout", { method: "POST" });
-  } catch (e) {
-    // ignore logout errors
-  }
-  sessionStarted = false;
-  currentUser = null;
-  updateAuthUI();
-  showLanding();
-  toast("Logged out.");
+// FIX: logout navigates to /auth/logout which clears BOTH session["user"] and
+// session["user_id"], then redirects home. This works for OAuth and password users.
+function handleLogout() {
+  window.location.href = "/auth/logout";
 }
 
 async function refreshSavedWorlds() {
@@ -214,7 +215,6 @@ async function refreshSavedWorlds() {
       els.savedWorlds.innerHTML = `<div class="muted">No saved worlds yet.</div>`;
       return;
     }
-
     els.savedWorlds.innerHTML = "";
     for (const w of worlds) {
       const item = document.createElement("div");
@@ -231,7 +231,6 @@ async function refreshSavedWorlds() {
       `;
       els.savedWorlds.appendChild(item);
     }
-
     els.savedWorlds.querySelectorAll("button[data-act='load']").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const id = btn.getAttribute("data-id");
@@ -257,7 +256,6 @@ async function generateWorld() {
     });
     renderWorld(data.world);
     savedWorldId = null;
-
     els.chat.innerHTML = "";
     appendMessage("assistant", "World created. Ask me anything about it.");
     setStatus(els.genStatus, "World generated.");
@@ -323,11 +321,17 @@ async function saveWorld() {
 async function loadWorld(id) {
   setLoading(els.genStatus, "Loading saved world…");
   try {
-    const data = await api("/api/worlds/load", { method: "POST", body: JSON.stringify({ id }) });
+    const data = await api("/api/worlds/load", {
+      method: "POST",
+      body: JSON.stringify({ id }),
+    });
     renderWorld(data.world);
     savedWorldId = data?.meta?.id || id;
     els.chat.innerHTML = "";
-    appendMessage("assistant", `Loaded "${data?.world?.world_name || "world"}". Ask me anything.`);
+    appendMessage(
+      "assistant",
+      `Loaded "${data?.world?.world_name || "world"}". Ask me anything.`
+    );
     setStatus(els.genStatus, "Loaded.");
     toast("Loaded.");
   } catch (e) {
@@ -359,7 +363,51 @@ function toggleTheme() {
   toast(`Theme: ${next}`);
 }
 
-// Events
+function openFlashcards() {
+  if (!currentWorld) return toast("No world loaded.", "err");
+  
+  els.flashcardGrid.innerHTML = ""; // Clear old cards
+
+  // Clean, text-only card generator
+  const createCard = (frontText, backText) => {
+    if (!backText) return; 
+    const card = document.createElement("div");
+    card.className = "flashcard";
+    card.innerHTML = `
+      <div class="flashcard-inner">
+        <div class="flashcard-front">${escapeHtml(frontText)}</div>
+        <div class="flashcard-back">${escapeHtml(backText)}</div>
+      </div>
+    `;
+    // Flip behavior on click
+    card.addEventListener("click", () => card.classList.toggle("flipped"));
+    els.flashcardGrid.appendChild(card);
+  };
+
+  // Generate the cards from the current world data
+  if (Array.isArray(currentWorld.creatures)) {
+    currentWorld.creatures.forEach(c => createCard(c.name, c.description));
+  }
+  if (Array.isArray(currentWorld.geography)) {
+    currentWorld.geography.forEach((item, i) => createCard(`Geography #${i+1}`, item));
+  }
+  if (Array.isArray(currentWorld.history)) {
+    currentWorld.history.forEach((item, i) => createCard(`History #${i+1}`, item));
+  }
+  if (Array.isArray(currentWorld.magic_system)) {
+    currentWorld.magic_system.forEach((item, i) => createCard(`Magic #${i+1}`, item));
+  }
+
+  // Show the modal
+  els.flashcardModal.classList.remove("hidden");
+}
+
+function closeFlashcards() {
+  els.flashcardModal.classList.add("hidden");
+}
+
+// ── Event listeners ──────────────────────────────────────────────────────────
+
 els.generateBtn.addEventListener("click", generateWorld);
 els.worldIdea.addEventListener("keydown", (e) => {
   if (e.key === "Enter") generateWorld();
@@ -378,10 +426,23 @@ els.guestBtnHero.addEventListener("click", continueAsGuest);
 els.saveBtn.addEventListener("click", saveWorld);
 els.downloadBtn.addEventListener("click", downloadWorld);
 
-// Boot
+els.flashcardBtn.addEventListener("click", openFlashcards);
+els.flashcardClose.addEventListener("click", closeFlashcards);
+
+// Close modal if user clicks the dark background outside the modal
+els.flashcardModal.addEventListener("click", (e) => {
+  if (e.target.classList.contains("modal-backdrop")) {
+    closeFlashcards();
+  }
+});
+
+// FIX: logoutBtn previously had NO click handler — added here
+els.logoutBtn.addEventListener("click", handleLogout);
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+
 initTheme();
 autosize(els.chatBox);
 fetchCurrentUser();
 refreshSavedWorlds();
 appendMessage("assistant", "Describe a world idea, then click Generate.");
-
