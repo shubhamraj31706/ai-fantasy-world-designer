@@ -1,6 +1,8 @@
 import json
 import os
 
+import base64
+import urllib.parse
 from typing import Any, Dict, List
 
 from dotenv import load_dotenv
@@ -12,6 +14,7 @@ from flask import (
     request,
     send_from_directory,
     session,
+    url_for,
 )
 from flask_session import Session
 from google import genai
@@ -35,20 +38,22 @@ def create_app() -> Flask:
     # ── Config MUST come before Session(app) and init_oauth ──────────────────
     app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev_only_change_me")
 
-    # WHY cachelib instead of filesystem:
-    # The filesystem backend has a race condition: it may not flush the OAuth
-    # state to disk before Flask sends the redirect to Google. When Google
-    # returns, the state file is missing -> MismatchingStateError.
-    # cachelib stores sessions in-memory (a plain dict), reads/writes are
-    # instant and the state is always there when the callback arrives.
-    from cachelib.simple import SimpleCache
-    app.config["SESSION_TYPE"] = "cachelib"
-    app.config["SESSION_CACHELIB"] = SimpleCache(threshold=500, default_timeout=3600)
+    # Filesystem sessions — survive Flask reloader restarts.
+    # The OAuth state (stored when user clicks Login) must still be there
+    # when Google redirects back seconds later. In-memory (cachelib/SimpleCache)
+    # gets wiped when Flask's debug reloader restarts the process mid-flow.
+    # Filesystem writes to disk instantly, so the state survives any restart.
+    _sess_dir = os.path.join(os.path.dirname(__file__), ".flask_session")
+    os.makedirs(_sess_dir, exist_ok=True)
+    app.config["SESSION_TYPE"] = "filesystem"
+    app.config["SESSION_FILE_DIR"] = _sess_dir
+    app.config["SESSION_FILE_THRESHOLD"] = 500
     app.config["SESSION_PERMANENT"] = True
     app.config["PERMANENT_SESSION_LIFETIME"] = 3600
+    # Lax: browser must send the cookie on the Google/GitHub redirect-back
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["SESSION_COOKIE_HTTPONLY"] = True
-    app.config["SESSION_COOKIE_SECURE"] = False
+    app.config["SESSION_COOKIE_SECURE"] = False   # False = http://localhost is fine
     Session(app)
 
     # ── OAuth + auth blueprint (registered after config is ready) ─────────────
@@ -437,6 +442,8 @@ Constraints:
         except Exception as e:
             print(f"\n❌ IMAGE GENERATION ERROR: {str(e)}\n") 
             return jsonify({"error": "Image generation failed", "details": str(e)}), 500
+
+
     # ── World persistence ─────────────────────────────────────────────────────
 
     @app.get("/api/worlds")
@@ -541,4 +548,9 @@ Constraints:
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # use_reloader=False stops Flask from forking a child process on startup.
+    # That fork was wiping the OAuth state stored in the session between
+    # "redirect to Google" and "Google redirects back" → MismatchingStateError.
+    # Debug error pages still work; auto-reload on file-save is disabled
+    # (just restart manually with Ctrl+C → python backend\app.py).
+    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)

@@ -30,6 +30,7 @@ const els = {
   flashcardModal: document.getElementById("flashcard-modal"),
   flashcardClose: document.getElementById("flashcard-close"),
   flashcardGrid: document.getElementById("flashcard-grid"),
+
 };
 
 let currentWorld = null;
