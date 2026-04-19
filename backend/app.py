@@ -14,7 +14,6 @@ from flask import (
     request,
     send_from_directory,
     session,
-    url_for,
 )
 from flask_session import Session
 from google import genai
@@ -38,22 +37,26 @@ def create_app() -> Flask:
     # ── Config MUST come before Session(app) and init_oauth ──────────────────
     app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev_only_change_me")
 
-    # Filesystem sessions — survive Flask reloader restarts.
-    # The OAuth state (stored when user clicks Login) must still be there
-    # when Google redirects back seconds later. In-memory (cachelib/SimpleCache)
-    # gets wiped when Flask's debug reloader restarts the process mid-flow.
-    # Filesystem writes to disk instantly, so the state survives any restart.
-    _sess_dir = os.path.join(os.path.dirname(__file__), ".flask_session")
-    os.makedirs(_sess_dir, exist_ok=True)
-    app.config["SESSION_TYPE"] = "filesystem"
-    app.config["SESSION_FILE_DIR"] = _sess_dir
-    app.config["SESSION_FILE_THRESHOLD"] = 500
+    # Session strategy:
+    # - On Render (production): cachelib in-memory — no disk, no reloader, stable.
+    # - Locally: filesystem — survives the reloader fork that wipes in-memory caches.
+    # RENDER env var is set automatically by Render on all deployed services.
+    _on_render = os.getenv("RENDER", "") != ""
+    if _on_render:
+        from cachelib.simple import SimpleCache
+        app.config["SESSION_TYPE"] = "cachelib"
+        app.config["SESSION_CACHELIB"] = SimpleCache(threshold=500, default_timeout=3600)
+    else:
+        _sess_dir = os.path.join(os.path.dirname(__file__), ".flask_session")
+        os.makedirs(_sess_dir, exist_ok=True)
+        app.config["SESSION_TYPE"] = "filesystem"
+        app.config["SESSION_FILE_DIR"] = _sess_dir
+        app.config["SESSION_FILE_THRESHOLD"] = 500
     app.config["SESSION_PERMANENT"] = True
     app.config["PERMANENT_SESSION_LIFETIME"] = 3600
-    # Lax: browser must send the cookie on the Google/GitHub redirect-back
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["SESSION_COOKIE_HTTPONLY"] = True
-    app.config["SESSION_COOKIE_SECURE"] = False   # False = http://localhost is fine
+    app.config["SESSION_COOKIE_SECURE"] = _on_render   # True on HTTPS (Render), False locally
     Session(app)
 
     # ── OAuth + auth blueprint (registered after config is ready) ─────────────
@@ -599,9 +602,6 @@ Constraints:
 app = create_app()
 
 if __name__ == "__main__":
-    # use_reloader=False stops Flask from forking a child process on startup.
-    # That fork was wiping the OAuth state stored in the session between
-    # "redirect to Google" and "Google redirects back" → MismatchingStateError.
-    # Debug error pages still work; auto-reload on file-save is disabled
-    # (just restart manually with Ctrl+C → python backend\app.py).
-    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
+    port = int(os.getenv("PORT", 5000))
+    on_render = os.getenv("RENDER", "") != ""
+    app.run(host="0.0.0.0", port=port, debug=not on_render, use_reloader=False)
