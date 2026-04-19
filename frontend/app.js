@@ -227,15 +227,40 @@ async function refreshSavedWorlds() {
           <div class="saved-sub">Updated: ${escapeHtml(dt.toLocaleString())}</div>
         </div>
         <div class="saved-actions">
+          <button class="btn ghost icon-btn delete-btn" data-act="delete" data-id="${escapeHtml(w.id)}" type="button" title="Delete World">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          </button>
           <button class="btn ghost" data-act="load" data-id="${escapeHtml(w.id)}" type="button">Load</button>
         </div>
       `;
       els.savedWorlds.appendChild(item);
     }
+    
+    // Listen for Load clicks
     els.savedWorlds.querySelectorAll("button[data-act='load']").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const id = btn.getAttribute("data-id");
         await loadWorld(id);
+      });
+    });
+
+    // Listen for Delete clicks
+    els.savedWorlds.querySelectorAll("button[data-act='delete']").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        if (confirm("Are you sure you want to destroy this world? This magic cannot be undone.")) {
+          try {
+            await api("/api/worlds/delete", {
+              method: "POST",
+              body: JSON.stringify({ id }),
+            });
+            toast("World destroyed.");
+            if (savedWorldId === id) savedWorldId = null; // Unbind if currently loaded
+            await refreshSavedWorlds(); // Refresh the list immediately
+          } catch (e) {
+            toast(e.message, "err");
+          }
+        }
       });
     });
   } catch (e) {
@@ -341,9 +366,43 @@ async function loadWorld(id) {
   }
 }
 
-function downloadWorld() {
+async function downloadWorld() {
   if (!savedWorldId) return toast("Save the world first, then download.", "err");
-  window.location.href = `/api/worlds/download/${encodeURIComponent(savedWorldId)}.txt`;
+
+  try {
+    // 1. Fetch the text file from your Flask backend
+    const response = await fetch(`/api/worlds/download/${encodeURIComponent(savedWorldId)}.txt`);
+    
+    if (!response.ok) {
+      throw new Error("Failed to fetch the file from the server.");
+    }
+
+    // 2. Convert the response to a Blob (a raw file object)
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    
+    // 3. Create a hidden link to trigger the download
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    
+    // Clean up the filename so it is safe for all operating systems
+    const safeName = (currentWorld?.world_name || "fantasy_world")
+      .replace(/[^a-z0-9]/gi, '_')
+      .toLowerCase();
+    a.download = `${safeName}_lore.txt`;
+    
+    // 4. Click it and clean up the DOM
+    document.body.appendChild(a);
+    a.click();
+    
+    window.URL.revokeObjectURL(url);
+    a.remove();
+    
+    toast("Download complete!");
+  } catch (e) {
+    toast(e.message, "err");
+  }
 }
 
 function autosize(textarea) {
@@ -410,8 +469,15 @@ function closeFlashcards() {
 // ── Event listeners ──────────────────────────────────────────────────────────
 
 els.generateBtn.addEventListener("click", generateWorld);
+// Make the prompt box auto-resize when typing
+els.worldIdea.addEventListener("input", () => autosize(els.worldIdea));
+
+// Handle Enter key for the prompt box
 els.worldIdea.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") generateWorld();
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault(); // Prevents adding a blank new line
+    generateWorld();
+  }
 });
 els.sendBtn.addEventListener("click", sendChat);
 els.chatBox.addEventListener("input", () => autosize(els.chatBox));
@@ -444,6 +510,7 @@ els.logoutBtn.addEventListener("click", handleLogout);
 
 initTheme();
 autosize(els.chatBox);
+autosize(els.worldIdea);
 fetchCurrentUser();
 refreshSavedWorlds();
 appendMessage("assistant", "Describe a world idea, then click Generate.");

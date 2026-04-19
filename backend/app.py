@@ -504,11 +504,15 @@ Constraints:
         world = record.get("world") or {}
         title = record.get("title") or (world.get("world_name") or "World")
         text = _world_to_pretty_text(title=title, world=world)
-        filename = title.replace(" ", "_").replace("/", "_")
+        
+        # FIX: HTTP headers strictly require ASCII characters. If 'title' contains 
+        # non-English characters (like Hindi), the server crashes.
+        # Since our JavaScript frontend (a.download) dictates the final filename 
+        # anyway, we pass a safe, static ASCII string here.
         return Response(
             text,
             mimetype="text/plain; charset=utf-8",
-            headers={"Content-Disposition": f'attachment; filename="{filename}.txt"'},
+            headers={"Content-Disposition": 'attachment; filename="loreforge_export.txt"'},
         )
 
     def _world_to_pretty_text(title: str, world: Dict[str, Any]) -> str:
@@ -532,6 +536,24 @@ Constraints:
         out.append(section("Magic System", world.get("magic_system", [])))
         out.append(section("Plot Hooks", world.get("plot_hooks", [])))
         return "".join(out).strip() + "\n"
+    
+    @app.post("/api/worlds/delete")
+    def delete_world() -> Any:
+        body = request.get_json(silent=True) or {}
+        world_id = str(body.get("id") or "").strip()
+        
+        if not world_id:
+            return jsonify({"error": "Missing 'id'"}), 400
+            
+        success = store.delete_world(world_id)
+        if not success:
+            return jsonify({"error": "World not found or already deleted."}), 404
+            
+        # If the user deleted the world they currently have loaded, unbind it
+        if session.get("saved_world_id") == world_id:
+            session.pop("saved_world_id", None)
+            
+        return jsonify({"ok": True})
 
     # ── SPA fallback ──────────────────────────────────────────────────────────
 

@@ -73,6 +73,9 @@
   --topbar-bg: rgba(248, 246, 255, 0.9);
 }
 
+/* Ensure the HTML hidden attribute always works */
+[hidden] { display: none !important; }
+
 /* ── Reset & Base ──────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -297,7 +300,11 @@ p  { margin: 0; }
   font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 4px;
 }
 .hero-sub { color: var(--muted); font-size: 0.8rem; line-height: 1.5; font-style: italic; }
-.hero-form { display: flex; gap: 10px; }
+.hero-form { 
+  display: flex; 
+  gap: 10px; 
+  align-items: flex-start; /* This stops the button from stretching */
+}
 @media (max-width: 520px) { .hero-form { flex-direction: column; } }
 
 /* World data grid */
@@ -430,6 +437,14 @@ p  { margin: 0; }
 .saved-title { font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.8rem; }
 .saved-sub { color: var(--muted); font-size: 0.72rem; margin-top: 2px; }
 .saved-actions { display: flex; gap: 6px; }
+
+.delete-btn { color: var(--muted); }
+.delete-btn:hover { 
+  color: var(--danger); 
+  border-color: var(--danger); 
+  background: var(--glow3); 
+  box-shadow: none; 
+}
 
 /* ── Status ──────────────────────────────────────────────────── */
 .status { margin-top: 8px; font-size: 0.75rem; color: var(--muted); min-height: 14px; font-style: italic; }
@@ -622,4 +637,59 @@ p  { margin: 0; }
 @media (max-width: 480px) {
   .hero-actions { flex-direction: column; }
   .btn.btn-lg { width: 100%; justify-content: center; }
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.site-footer {
+  padding: 40px 20px 24px;
+  margin-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.footer-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-name {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+
+.footer-tagline {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.footer-heart {
+  color: var(--danger);
+}
+
+.footer-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.footer-dots span {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  opacity: 0.6;
 }

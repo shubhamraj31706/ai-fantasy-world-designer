@@ -81,3 +81,17 @@ class WorldStore:
         _safe_write_json(self.storage_path, data)
         return record
 
+    def delete_world(self, world_id: str) -> bool:
+        data = _safe_read_json(self.storage_path)
+        worlds: List[Dict[str, Any]] = data.get("worlds", [])
+        initial_count = len(worlds)
+        
+        # Filter out the world with the matching ID
+        data["worlds"] = [w for w in worlds if w.get("id") != world_id]
+        
+        # If the list shrank, it means we successfully deleted it
+        if len(data["worlds"]) < initial_count:
+            _safe_write_json(self.storage_path, data)
+            return True
+            
+        return False
