@@ -424,25 +424,54 @@ Constraints:
             return jsonify({"error": "Missing name or description"}), 400
 
         try:
-            # We create a prompt just like before
-            prompt = f"Fantasy concept art of a creature named {name}. Description: {description}. Style: digital painting, high fantasy, detailed."
+            # 1. Safe Translation Layer
+            # We default to the original text just in case Gemini fails
+            english_details = f"{name}. {description}" 
             
-            # URL-encode the prompt so it's safe for a web link
+            try:
+                client = _get_gemini_client()
+                translate_prompt = (
+                    f"Translate this fantasy creature to English. "
+                    f"Name: {name}. Description: {description}. "
+                    f"Return ONLY the English translation, no other text."
+                )
+                resp = client.models.generate_content(
+                    model=gemini_model,
+                    contents=translate_prompt,
+                )
+                if resp.text:
+                    english_details = resp.text.strip().replace('\n', ' ').replace('\r', '')
+            except Exception as gemini_err:
+                # If Gemini hits a rate limit (429), we just print a warning 
+                # and continue with the original text instead of crashing!
+                print(f"⚠️ Translation skipped (Rate limit): {gemini_err}")
+
+            # 2. Build the URL
+            prompt = f"Fantasy concept art of a creature. {english_details}. Style: digital painting, high fantasy, detailed."
             encoded_prompt = urllib.parse.quote(prompt)
             
-            # Pollinations.ai generates images just by visiting a URL!
-            # We add an arbitrary seed so it generates a new image each time
             import random
             seed = random.randint(1, 100000)
             image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=512&seed={seed}&nologo=true"
             
-            # Instead of downloading base64 bytes, we just send the URL directly to your frontend
-            return jsonify({"image_url": image_url})
+            # 3. The Proxy (With increased patience)
+            import requests
+            import base64
+            
+            # FIX: Increased timeout from 20 to 60 seconds
+            img_response = requests.get(image_url, timeout=60)
+            if img_response.status_code != 200:
+                raise Exception(f"Image provider returned status {img_response.status_code}")
+                
+            img_b64 = base64.b64encode(img_response.content).decode('utf-8')
+            mime_type = img_response.headers.get('Content-Type', 'image/jpeg')
+            data_uri = f"data:{mime_type};base64,{img_b64}"
+            
+            return jsonify({"image_url": data_uri})
 
         except Exception as e:
             print(f"\n❌ IMAGE GENERATION ERROR: {str(e)}\n") 
             return jsonify({"error": "Image generation failed", "details": str(e)}), 500
-
 
     # ── World persistence ─────────────────────────────────────────────────────
 

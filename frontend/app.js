@@ -123,15 +123,78 @@ function renderList(ul, items) {
 function renderCreatures(container, creatures) {
   container.innerHTML = "";
   if (!Array.isArray(creatures)) return;
+  
   for (const c of creatures) {
     const wrap = document.createElement("div");
     wrap.className = "creature";
     wrap.innerHTML = `
-      <div class="n">${escapeHtml(c?.name ?? "")}</div>
+      <div class="creature-header">
+        <div class="n">${escapeHtml(c?.name ?? "")}</div>
+        <button class="btn ghost btn-sm visualize-btn" data-name="${escapeHtml(c?.name ?? "")}" data-desc="${escapeHtml(c?.description ?? "")}" type="button">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          Visualize
+        </button>
+      </div>
       <div class="d">${escapeHtml(c?.description ?? "")}</div>
+      <div class="creature-img-wrapper" hidden>
+        <img class="creature-img" src="" alt="AI generated creature" hidden />
+        <div class="img-status muted">Conjuring image...</div>
+      </div>
     `;
     container.appendChild(wrap);
   }
+
+  // Wire up the new Visualize buttons
+  container.querySelectorAll(".visualize-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const name = btn.getAttribute("data-name");
+      const desc = btn.getAttribute("data-desc");
+      const wrapper = btn.parentElement.parentElement.querySelector(".creature-img-wrapper");
+      const img = wrapper.querySelector(".creature-img");
+      const status = wrapper.querySelector(".img-status");
+
+      // Set UI to loading state
+      btn.disabled = true;
+      wrapper.hidden = false;
+      img.hidden = true;
+      status.hidden = false;
+      status.textContent = "Conjuring high-fantasy image...";
+      status.classList.remove("err");
+
+      try {
+        const data = await api("/api/generate-image", {
+          method: "POST",
+          body: JSON.stringify({ name, description: desc }),
+        });
+
+        if (data.image_url) {
+          // 1. ALWAYS attach listeners first!
+          img.onload = () => {
+            img.hidden = false;
+            status.hidden = true;
+            btn.disabled = false;
+          };
+          
+          img.onerror = () => {
+            status.textContent = "Image magic fizzled. Try again.";
+            status.classList.add("err");
+            img.hidden = true;
+            btn.disabled = false;
+          };
+
+          // 2. THEN set the source to trigger the download
+          img.src = data.image_url;
+
+        } else {
+          throw new Error("No image returned by the oracle.");
+        }
+      } catch (e) {
+        status.textContent = "Failed to conjure image.";
+        status.classList.add("err");
+        btn.disabled = false;
+      }
+    });
+  });
 }
 
 function renderWorld(world) {
@@ -255,7 +318,20 @@ async function refreshSavedWorlds() {
               body: JSON.stringify({ id }),
             });
             toast("World destroyed.");
-            if (savedWorldId === id) savedWorldId = null; // Unbind if currently loaded
+            // If they delete the world they are currently looking at, wipe the screen
+            if (savedWorldId === id) {
+              savedWorldId = null;
+              currentWorld = null;
+              els.worldName.textContent = "No world forged yet.";
+              els.geography.innerHTML = "";
+              els.history.innerHTML = "";
+              els.creatures.innerHTML = "";
+              els.magic.innerHTML = "";
+              els.hooks.innerHTML = "";
+              els.chat.innerHTML = "";
+              els.pill.textContent = "No world";
+              els.flashcardBtn.hidden = true;
+            }
             await refreshSavedWorlds(); // Refresh the list immediately
           } catch (e) {
             toast(e.message, "err");

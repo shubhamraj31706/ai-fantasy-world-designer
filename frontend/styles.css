@@ -693,3 +693,37 @@ p  { margin: 0; }
   border-radius: 50%;
   opacity: 0.6;
 }
+
+/* ── Creature Images ─────────────────────────────────────────── */
+.creature-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.creature-img-wrapper {
+  margin-top: 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.2);
+  text-align: center;
+  overflow: hidden;
+}
+
+[data-theme="light"] .creature-img-wrapper {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.creature-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  animation: fade-in 0.4s ease;
+}
+
+.img-status {
+  padding: 12px;
+  font-size: 0.8rem;
+}
