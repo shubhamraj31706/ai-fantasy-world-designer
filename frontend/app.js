@@ -30,7 +30,13 @@ const els = {
   flashcardModal: document.getElementById("flashcard-modal"),
   flashcardClose: document.getElementById("flashcard-close"),
   flashcardGrid: document.getElementById("flashcard-grid"),
-
+  storyBtn: document.getElementById("storyBtn"),
+  storyModal: document.getElementById("story-modal"),
+  storyClose: document.getElementById("story-close"),
+  storyLoading: document.getElementById("story-loading"),
+  storyBody: document.getElementById("story-body"),
+  storyCopyBtn: document.getElementById("story-copy-btn"),
+  storyWorldName: document.getElementById("story-world-name"),
 };
 
 let currentWorld = null;
