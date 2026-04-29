@@ -207,6 +207,7 @@ function renderWorld(world) {
   renderList(els.hooks, world?.plot_hooks);
   els.pill.textContent = world?.world_name || "World loaded";
   els.flashcardBtn.hidden = false;
+  els.storyBtn.hidden = false;
 }
 
 function appendMessage(role, text) {
@@ -542,6 +543,47 @@ function closeFlashcards() {
   els.flashcardModal.classList.add("hidden");
 }
 
+async function generateStory() {
+  if (!currentWorld) return toast("Generate a world first.", "err");
+
+  // Open modal and show loading
+  els.storyModal.classList.remove("hidden");
+  els.storyLoading.hidden = false;
+  els.storyBody.textContent = "";
+  els.storyCopyBtn.hidden = true;
+  els.storyWorldName.textContent = (currentWorld.world_name || "Your World") + " — The Story";
+  els.storyBtn.disabled = true;
+
+  try {
+    const data = await api("/api/generate-story", { method: "POST" });
+    els.storyLoading.hidden = true;
+
+    // Render paragraphs — split on double newline for nice spacing
+    els.storyBody.innerHTML = "";
+    const paragraphs = data.story.split(/
+
++/).filter(p => p.trim());
+    paragraphs.forEach(para => {
+      const p = document.createElement("p");
+      p.textContent = para.trim();
+      els.storyBody.appendChild(p);
+    });
+
+    els.storyCopyBtn.hidden = false;
+    toast("Story generated!");
+  } catch (e) {
+    els.storyLoading.hidden = true;
+    els.storyBody.textContent = "Failed to generate story. Please try again.";
+    toast(e.message, "err");
+  } finally {
+    els.storyBtn.disabled = false;
+  }
+}
+
+function closeStory() {
+  els.storyModal.classList.add("hidden");
+}
+
 // ── Event listeners ──────────────────────────────────────────────────────────
 
 els.generateBtn.addEventListener("click", generateWorld);
@@ -581,6 +623,16 @@ els.flashcardModal.addEventListener("click", (e) => {
 
 // FIX: logoutBtn previously had NO click handler — added here
 els.logoutBtn.addEventListener("click", handleLogout);
+
+els.storyBtn.addEventListener("click", generateStory);
+els.storyClose.addEventListener("click", closeStory);
+els.storyModal.addEventListener("click", e => { if (e.target.classList.contains("story-backdrop")) closeStory(); });
+els.storyCopyBtn.addEventListener("click", () => {
+  const text = Array.from(els.storyBody.querySelectorAll("p")).map(p => p.textContent).join("
+
+");
+  navigator.clipboard.writeText(text).then(() => toast("Story copied!")).catch(() => toast("Copy failed", "err"));
+});
 
 // ── Boot ─────────────────────────────────────────────────────────────────────
 
