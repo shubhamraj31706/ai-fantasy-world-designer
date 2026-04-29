@@ -230,10 +230,6 @@
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                   Flashcards
                 </button>
-                <button id="storyBtn" class="btn ghost btn-sm" type="button" hidden>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                  Read Story
-                </button>
 
               </div>
 
@@ -338,28 +334,6 @@
           <p>Click any card to flip and reveal the lore.</p>
         </div>
         <div id="flashcard-grid" class="flashcard-grid"></div>
-      </div>
-    </section>
-
-    <!-- ══════════════════════════ STORY MODAL ══════════════════════════ -->
-    <section id="story-modal" class="modal hidden" aria-modal="true" role="dialog">
-      <div class="modal-backdrop story-backdrop"></div>
-      <div class="modal-content story-content">
-        <button class="modal-close" id="story-close" aria-label="Close">&times;</button>
-        <div class="modal-header">
-          <h2 id="story-world-name">The Story</h2>
-          <p>AI-generated short story based on your world's lore</p>
-        </div>
-        <div id="story-loading" class="story-loading" hidden>
-          <span class="spinner"></span> Writing your story…
-        </div>
-        <div id="story-body" class="story-body"></div>
-        <div class="story-footer">
-          <button id="story-copy-btn" class="btn ghost btn-sm" type="button" hidden>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Copy Story
-          </button>
-        </div>
       </div>
     </section>
 
