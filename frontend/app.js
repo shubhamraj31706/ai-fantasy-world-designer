@@ -560,9 +560,7 @@ async function generateStory() {
 
     // Render paragraphs — split on double newline for nice spacing
     els.storyBody.innerHTML = "";
-    const paragraphs = data.story.split(/
-
-+/).filter(p => p.trim());
+    const paragraphs = data.story.split(/\n+/).filter(p => p.trim());
     paragraphs.forEach(para => {
       const p = document.createElement("p");
       p.textContent = para.trim();
@@ -628,9 +626,7 @@ els.storyBtn.addEventListener("click", generateStory);
 els.storyClose.addEventListener("click", closeStory);
 els.storyModal.addEventListener("click", e => { if (e.target.classList.contains("story-backdrop")) closeStory(); });
 els.storyCopyBtn.addEventListener("click", () => {
-  const text = Array.from(els.storyBody.querySelectorAll("p")).map(p => p.textContent).join("
-
-");
+  const text = Array.from(els.storyBody.querySelectorAll("p")).map(p => p.textContent).join("\n\n");
   navigator.clipboard.writeText(text).then(() => toast("Story copied!")).catch(() => toast("Copy failed", "err"));
 });
 
